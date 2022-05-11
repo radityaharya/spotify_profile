@@ -1,0 +1,31 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" /> {% block header%} {% endblock %}
+    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap/css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='bootstrap/js/bootstrap.min.js')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/base.css')}}">
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.js"></script>
+</head>
+
+<body>
+    <section>
+        {% block body %} {% endblock %}
+    </section>
+    <footer class="bg-light">
+        <div class="container float-none py-4 py-lg-5">
+            <hr />
+            <div class="text-muted d-flex justify-content-between align-items-center pt-3">
+                <p class="mb-0">made with ♥️ by otied</p>
+                <ul class="list-inline mb-0">
+                    <li class="list-inline-item"></li>
+                    <li class="list-inline-item"></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</body>
+{% block script %} {% endblock %}
+
+</html>

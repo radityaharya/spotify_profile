@@ -1,0 +1,6 @@
+*.log
+.log
+debug.log
+.env
+.cache
+__pycache__/
