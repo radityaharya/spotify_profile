@@ -26,7 +26,7 @@ sp_oauth = spotipy.oauth2.SpotifyOAuth(
     client_id=os.getenv("SPOTIFY_CLIENT_ID"),
     client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
     redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
-    cache_handler= None
+    cache_handler=None,
 )
 
 # Setting up the logger to log to a file and to the console.
@@ -50,7 +50,6 @@ config = {
     "CACHE_REDIS_DB": os.getenv("REDIS_DB"),
     "CACHE_KEY_PREFIX": "spotify",
     "ENV": "PRODUCTION",
-    
 }
 
 
@@ -149,7 +148,7 @@ def user_top_page(user_id, is_base: bool = False):
         track_added = False
 
     user_token = util.decrypt(collection.find_one({"_id": user_id})["token"])
-    
+
     user_token = util.check_and_refresh_token(sp_oauth, collection, user_token, session)
     user = {
         "user_display_name": spotify.get_user_info(user_token["access_token"])[
@@ -168,14 +167,17 @@ def user_top_page(user_id, is_base: bool = False):
     currently_playing = spotify.get_user_currently_playing(user_token["access_token"])
     if currently_playing["track_name"] == "":
         try:
-            currently_playing = collection.find_one({"_id": user_id})["currently_playing"]
+            currently_playing = collection.find_one({"_id": user_id})[
+                "currently_playing"
+            ]
         except:
-            currently_playing = {"track_name": "Nothing is playing",
-                                    "track_artist": "",
-                                    "track_album": "",
-                                    "track_image": "",
-                                    "track_url": "",
-                                }
+            currently_playing = {
+                "track_name": "Nothing is playing",
+                "track_artist": "",
+                "track_album": "",
+                "track_image": "",
+                "track_url": "",
+            }
     return render_template(
         "top.html.jinja",
         user=user,
