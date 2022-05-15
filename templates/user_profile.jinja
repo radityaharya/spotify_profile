@@ -1,0 +1,157 @@
+{% extends "base.jinja" %} 
+{% import "components/public_playlists.jinja" as playlists %}
+{% import "components/top_card_tracks.jinja" as tops_track %}
+
+{% import "components/top_card_artists.jinja" as tops_artists %}
+{% block content %}
+    <header style="padding: 32px 0px 0px;background: #0E0E0E;padding-top: 2px;">
+        <!-- Start: 1 Row 2 Columns -->
+        <div class="container" style="margin-top: 94px;">
+            <div class="row row-cols-sm-1 row-cols-md-2 d-xxl-flex justify-content-xxl-center">
+                <div class="col" style="padding: 47px;padding-top: 27px;">
+                    <div class="text-center d-flex flex-column align-items-center flex-sm-column flex-md-row flex-lg-row justify-content-xxl-start"><img class="rounded-circle fit-cover" alt="{{user.user_display_name}} profile picture" width="150" height="150" src="{{user.user_profile_picture}}" style="min-width: 150px;min-height: 150px;margin-bottom: 0px;">
+                        <div class="align-self-center flex-wrap" style="padding: 23px;">
+                            <h1 class="d-flex justify-content-center justify-content-md-start user-profile name">{{user.user_display_name}}</h1>
+                            <p class="d-flex justify-content-center flex-wrap justify-content-md-start mb-2 user-profile followers">{{user.followers}} Followers</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6" style="padding: 68px;">
+                    <div class="d-flex justify-content-center justify-content-sm-center justify-content-md-end align-items-xl-center" style="margin: 11px;">
+                        <a id= "copy-button"><p class="text-end d-flex justify-content-center flex-wrap justify-content-md-start justify-content-xl-end" style="color: var(--bs-white);margin-bottom: 0px;">Share your spotistats link</p></a>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-clipboard" style="color: rgb(255,255,255);height: 10px;width: 10px;padding: 0px;margin: 7px;">
+                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"></path>
+                            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"></path>
+                        </svg>
+                    </div>
+                    <a href="{{user.user_profile_url}}" target="_blank"> 
+                    <div class="d-flex justify-content-center justify-content-sm-center justify-content-md-end align-items-xl-center" style="margin: 11px;">
+                        <p class="text-end d-flex justify-content-center flex-wrap justify-content-md-start justify-content-xl-end" style="color: var(--bs-white);margin-bottom: 0px;">Open in Spotify</p><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 16 16" class="bi bi-box-arrow-up-right" style="color: rgb(255,255,255);width: 10px;height: 10px;padding: 0px;margin: 7px;">
+                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"></path>
+                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"></path>
+                        </svg>
+                    </div>
+                    </a>
+                </div>
+            </div>
+        </div><!-- End: 1 Row 2 Columns -->
+    </header><!-- Start: Nowplaying - Top Genre -->
+    <section>
+        <!-- Start: 1 Row 2 Columns -->
+        <div class="container" style="margin-top: 94px;">
+            <div class="row">
+                <div class="col-md-6" style="padding: 47px;">
+                    <!-- Start: Top Genre Parent div -->
+                    <div class="text-center d-xxl-flex align-items-center flex-sm-column flex-md-column align-items-xxl-start">
+                        <div style="padding: 0px;">
+                            <h2 class="text-start d-flex justify-content-center justify-content-md-start" style="font-size: 2rem;margin-bottom: 19px;font-weight: bold;color: var(--bs-white);">Top Genres</h2><!-- Start: Top Genres -->
+                            <div class="d-flex justify-content-evenly align-content-start align-self-start flex-wrap justify-content-lg-start">
+                                {% for genre in top_genres%}
+                                <p class="genre-tag">{{genre.name}}</p>
+                                {% endfor %}
+                            </div><!-- End: Top Genres -->
+                        </div>
+                    </div><!-- End: Top Genre Parent div -->
+                </div>
+                <div class="col-md-6" style="padding: 47px;">
+                {% if has_currently_playing %}
+                <a href="{{currently_playing.track_url}}" target="_blank" id="current-track-link">
+                    <div class="d-flex justify-content-center justify-content-md-end"><lottie-player src="https://assets1.lottiefiles.com/packages/lf20_yuv2ci2j.json"  background="transparent"  speed="1"  style="width: 2.5rem;height: 2.5rem;" loop  autoplay></lottie-player>
+                        <h2 class="text-start d-flex justify-content-center justify-content-md-start justify-content-xl-end" style="font-size: 2rem;font-weight: bold;color: var(--bs-white);">Now Playing</h2>
+                    </div>
+                    <div class="text-center d-flex flex-column align-items-center align-items-md-end"><img class="rounded fit-cover nowplaying-album_cover" width="150" height="150" src="{{currently_playing.album_cover}}">
+                        <div class="align-self-center flex-wrap align-self-md-end " style="padding: 11px;">
+                            <p class="text-end text-md-end d-flex justify-content-center flex-wrap justify-content-md-end nowplaying-track_name"><strong>{{currently_playing.track_name}}</strong></p>
+                            <p class="d-flex justify-content-center flex-wrap justify-content-md-end justify-content-lg-end nowplaying-artist">{{currently_playing.artist_name}}<br></p>
+                        </div>
+                    </div>
+                </a>
+                {% endif %}
+                </div>
+            </div>
+        </div><!-- End: 1 Row 2 Columns -->
+    </section><!-- End: Nowplaying - Top Genre -->
+    <!-- Start: tops -->
+    <section>
+        <!-- Start: Features Cards -->
+        <div class="container">
+            <div class="py-5 p-lg-5">
+                <!-- Start: Statistics Header -->
+                <div style="padding: 15px;">
+                    <h2 class="text-start d-flex justify-content-center justify-content-md-start statistic-header">Statistics</h2>
+                </div><!-- End: Statistics Header -->
+                <div>
+                    <ul class="nav nav-pills d-sm-flex justify-content-center justify-content-md-start time-selection" role="tablist" style="margin: 14px; margin-top: 5px; margin-bottom: 30px">
+                        <li class="nav-item" role="presentation"><a class="nav-link active" role="tab" data-bs-toggle="pill" href="#tab-1" style="padding-top: 2px;padding-bottom: 2px;">4 Weeks</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" role="tab" data-bs-toggle="pill" href="#tab-2" style="padding-top: 2px;padding-bottom: 2px;">6 Months</a></li>
+                        <li class="nav-item" role="presentation"><a class="nav-link" role="tab" data-bs-toggle="pill" href="#tab-3" style="padding-top: 2px;padding-bottom: 2px;">All Time</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" role="tabpanel" id="tab-1">
+                            <div class="row row-cols-1 row-cols-md-2 mx-auto">
+                                <!-- Start: top tracks -->
+                                {{tops_track.component(user_data["top_tracks"]["short_term"])}}
+                                <!-- End: top tracks -->
+                                <!-- Start: top artists -->
+                                {{tops_artists.component(user_data["top_artists"]["short_term"])}}
+                                <!-- End: top artists -->
+                            </div>
+                        </div>
+                        <div class="tab-pane" role="tabpanel" id="tab-2">
+                                <div class="row row-cols-1 row-cols-md-2 mx-auto">
+                                <!-- Start: top tracks -->
+                                {{tops_track.component(user_data["top_tracks"]["medium_term"])}}
+                                <!-- End: top tracks -->
+                                <!-- Start: top artists -->
+                                {{tops_artists.component(user_data["top_artists"]["medium_term"])}}
+                                <!-- End: top artists -->
+                            </div>
+                        </div>
+                        <div class="tab-pane" role="tabpanel" id="tab-3">
+                            <div class="row row-cols-1 row-cols-md-2 mx-auto">
+                                <!-- Start: top tracks -->
+                                {{tops_track.component(user_data["top_tracks"]["long_term"])}}
+                                <!-- End: top tracks -->
+                                <!-- Start: top artists -->
+                                {{tops_artists.component(user_data["top_artists"]["long_term"])}}
+                                <!-- End: top artists -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- End: Features Cards -->
+    </section><!-- End: tops -->
+    <!-- Start: Share a song -->
+    <section class="py-5">
+        <div class="container">
+            <div class="border rounded border-white d-flex flex-column justify-content-between align-items-center flex-lg-row bg-primary-gradient p-4 p-lg-5">
+                <div class="text-center text-lg-start py-3 py-lg-1">
+                    <h2 class="fw-bold mb-2" style="color: var(--bs-white);">Suggest {{user.user_display_name}} a song !</h2>
+                    <p class="mb-0" style="max-width: 370px;color: var(--bs-white);">Paste any Spotify link and it will automatically be added to otied's <a href="https://open.spotify.com/playlist/6J1wZcab7rK7x6LMCmHttF" target="_blank">recommended playlist</a></p>
+                </div>
+                <form class="d-flex justify-content-center flex-wrap flex-lg-nowrap" method="post" action="/user/{{user.user_id}}/add_track_to_recommended_playlist">
+                    <div class="my-2" style="width: 327px;"><input class="border rounded-pill shadow-sm form-control" type="link" name="link" placeholder="Spotify Link"></div>
+                    <div class="my-2"><button class="btn btn-primary shadow ms-2" type="submit" style="background: #00b779;width: 119.359px;">Add it!</button></div>
+                </form>
+            </div>
+        </div>
+    </section><!-- End: Share a song -->
+    {{ playlists.component(public_playlists, user) }}
+{% endblock %}
+{% block script %}
+<script>
+    document.getElementById("copy-button").addEventListener("click", function() {
+        value = "https://spotify.radityaharya.me/user/{{user.user_id}}"
+        navigator.clipboard.writeText(value).then(function() {
+            console.log("Copied to clipboard: " + value);
+        }, function(err) {
+            console.error("Could not copy text: ", err);
+        });
+        document.getElementById("copy-button").innerHTML = '<p class="text-end d-flex justify-content-center flex-wrap justify-content-md-start justify-content-xl-end" style="color: var(--bs-white);margin-bottom: 0px;">Copied</p>';
+    });
+
+</script>
+{% endblock %}

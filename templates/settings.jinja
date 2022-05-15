@@ -1,0 +1,56 @@
+{% extends "base.jinja"%}
+{% block content %}
+
+    <section style="padding: 7px;padding-bottom: 50px;padding-top: 0px;">
+        <div style="padding: 26px;">
+            <div style="padding: 15px;padding-bottom: 0px;">
+                <h1 class="text-start d-flex justify-content-center justify-content-md-start statistic-header">Settings</h1>
+            </div>
+        </div>
+        <div class="container" style="margin-top: 10px;margin-bottom: 10px;">
+            <div class="border rounded border-white d-flex flex-column justify-content-between align-items-center flex-lg-column align-items-xl-start bg-primary-gradient p-4 p-lg-5">
+                <div class="text-center text-lg-start py-3 py-lg-1">
+                    <h2 class="fw-bold mb-2" style="color: var(--bs-white);font-size: 23px;">Spotify Account</h2>
+                    <div style="margin-top: 23px;">
+                        <p class="mb-0" style="max-width: 370px;color: var(--bs-gray-500);font-size: 13px;">Username</p>
+                        <p class="mb-0" style="max-width: 370px;color: var(--bs-white);">radityaharya</p>
+                    </div>
+                    <div style="margin-top: 23px;">
+                        <p class="mb-0" style="max-width: 370px;color: var(--bs-gray-500);font-size: 13px;">Account type</p>
+                        <p class="mb-0" style="max-width: 370px;color: var(--bs-white);">Spotify Premium</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container" style="margin-top: 10px;margin-bottom: 10px;">
+            <div class="border rounded border-white d-flex flex-column justify-content-between align-items-center flex-lg-column align-items-xl-start bg-primary-gradient p-4 p-lg-5">
+                <div class="text-center text-lg-start py-3 py-lg-1">
+                    <h2 class="fw-bold mb-2" style="color: var(--bs-white);font-size: 23px;">Profile Address</h2>
+                    <p class="mb-0" style="max-width: 370px;color: var(--bs-gray-500);">A short link to your profile.</p>
+                </div>
+                <form class="d-flex justify-content-center flex-wrap flex-lg-nowrap" style="margin-top: 14px;" action="javascript:void(0);" >
+                    <div class="my-2" style="width: 327px;"><input class="border rounded-pill shadow-sm form-control" type="link" name="link" placeholder="Spotify Link" value="spotify.radityaharya.me/radityaharya" /></div>
+                    <div class="my-2"><button class="btn btn-primary shadow ms-2" id="update" style="background: #00b779;width: 119.359px;">Update</button></div>
+                </form>
+            </div>
+        </div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+$('#update').click(function(){
+    var link = $('input[name=link]').val();
+    //send a post request to update the link to https://spotify.radityaharya.me/user/{{user.user_id}}/update_profile_link
+    fetch (`https://spotify.radityaharya.me/user/{{user.user_id}}/update_profile_link`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            link: link
+        })
+    })
+});
+</script>
+{% endblock %}

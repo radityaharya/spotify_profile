@@ -1,0 +1,26 @@
+{% macro component(public_playlists, user)%}
+       <!-- Start: Public Playlists -->
+    <section>
+        <!-- Start: Features Cards -->
+        <div class="container py-5">
+            <div class="row mb-5">
+                <div class="col-md-8 col-xl-6 text-center mx-auto">
+                    <h2 class="fw-bold" style="color: var(--bs-white);"><strong>{{user.user_display_name}}'s Public Playlists</strong></h2>
+                </div>
+            </div>
+            <div class="d-flex justify-content-center flex-wrap mx-auto justify-content-sm-center" style="max-width: 900px;">
+            {% for playlist in public_playlists %}
+                <!-- Start: Playlist Item -->
+                <a href="{{playlist.playlist_url}}" target ="_blank">
+                <div class="text-center d-flex flex-column align-items-center justify-content-xxl-start playlist-container"><img loading = "lazy" class="img-fluid fit-cover" width="640" height="640" src="{{playlist.playlist_picture}}" alt="{{playlist.playlist_name}} playlist cover" style="margin-bottom: 0px;width: 150px;height: 150px;">
+                    <div class="d-xl-flex flex-column align-self-center flex-wrap justify-content-xl-center" style="padding: 0px;padding-left: 0px;margin-top:10px">
+                        <p class="d-flex justify-content-center justify-content-md-start playlist-name">{{playlist.playlist_name}}</p>
+                        <p class="text-start d-flex justify-content-center playlist-likes">{{playlist.playlist_like_count}} like</p>
+                    </div>
+                </div><!-- End: Playlist Item -->
+                </a>
+            {% endfor %}
+            </div>
+        </div><!-- End: Features Cards -->
+    </section><!-- End: Public Playlists -->
+{% endmacro %}

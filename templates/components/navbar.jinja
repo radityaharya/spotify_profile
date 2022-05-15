@@ -1,0 +1,45 @@
+{% macro navbar(page="index")%}
+    <nav class="navbar navbar-dark navbar-expand-md navbar-shrink py-3" id="mainNav" style="background: #0e0e0e;">
+        <div class="container">
+            <!-- Start: Logo -->
+            <a class="navbar-brand d-flex align-items-center" href="/index"><span>Spotistats</span></a>
+            <!-- End: Logo -->
+            <button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navcol-1">
+                <ul class="navbar-nav ms-auto">
+                    {% if page == "index" %}
+                    <li class="nav-item"><a class="nav-link active" href="/index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/404">Charts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/404">Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/">Your Account</a></li>
+                    {% elif page == "charts" %}
+                    <li class="nav-item"><a class="nav-link" href="/index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/404">Charts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/404">Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/">Your Account</a></li>
+                    {% elif page == "library" %}
+                    <li class="nav-item"><a class="nav-link" href="/index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/404">Charts</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/404">Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/">Your Account</a></li>
+                    {% elif page == "settings" %}
+                    <li class="nav-item"><a class="nav-link" href="/index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/404">Charts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/404">Library</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/settings">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/">Your Account</a></li>
+                    {% elif page == "youraccount" %}
+                    <li class="nav-item"><a class="nav-link" href="/index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/404">Charts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/404">Library</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/">Your Account</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endmacro %}

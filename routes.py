@@ -1,3 +1,4 @@
+import datetime
 import os
 import logging
 
@@ -18,7 +19,7 @@ client = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = client.spotify
 collection = db.spotify_users
 
-app = Flask(__name__)
+app = Flask("spotify")
 
 SCOPE = "user-read-private user-read-playback-state user-modify-playback-state user-library-read user-top-read user-library-modify playlist-read-private playlist-modify-private playlist-read-collaborative playlist-modify-public"
 sp_oauth = spotipy.oauth2.SpotifyOAuth(
@@ -26,7 +27,7 @@ sp_oauth = spotipy.oauth2.SpotifyOAuth(
     client_id=os.getenv("SPOTIFY_CLIENT_ID"),
     client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
     redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
-    cache_handler= None
+    cache_handler=None,
 )
 
 # Setting up the logger to log to a file and to the console.
@@ -37,8 +38,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("spotify")
-logger.setLevel(logging.DEBUG)
-
 config = {
     "DEBUG": True,
     "CACHE_TYPE": "redis",
@@ -50,7 +49,6 @@ config = {
     "CACHE_REDIS_DB": os.getenv("REDIS_DB"),
     "CACHE_KEY_PREFIX": "spotify",
     "ENV": "PRODUCTION",
-    
 }
 
 
@@ -58,7 +56,7 @@ app.config.from_mapping(config)
 cache = Cache(app)
 
 
-@app.route("/index")
+    
 @app.route("/")
 def index():
     """
@@ -68,16 +66,59 @@ def index():
         The login page if the user is not logged in, or the user's top page if the user is logged in.
     """
     if "auth" in session:
-        logger.debug(f"{session['auth']}")
         data = util.get_cookie(session)
         util.check_and_refresh_token(
             sp_oauth, collection, data["access_token"], session
         )
         logger.info(f"{data['user_info']['id']} logged in")
-        return user_top_page(data["user_info"]["id"], is_base=True)
+        return redirect("/user/{}".format(data["user_info"]["id"]))
     else:
-        return render_template("login.html.jinja")
+        return render_template("index.jinja", page = "index")
 
+@app.route("/index")
+def home():
+    return render_template("index.jinja", page = "index")
+
+@app.route("/settings")
+def settings():
+    data = util.get_cookie(session)
+    util.check_and_refresh_token(
+        sp_oauth, collection, data["access_token"], session
+    )
+    user_info = data["user_info"]
+    
+    user = {
+        "user_display_name": user_info["display_name"],
+        "user_profile_picture": user_info["images"][0]["url"],
+        "profile_url": user_info["external_urls"]["spotify"],
+        "followers": user_info["followers"]["total"],
+        "user_id": user_info["id"],
+    }
+    return render_template("settings.jinja", user = user, page = "settings")
+
+@app.route("/user/<user_id>/update_profile_link", methods=["POST"])
+def update_profile_link(user_id):
+    data = util.get_cookie(session)
+    user_info = data["user_info"]
+    util.check_and_refresh_token(
+        sp_oauth, collection, data["access_token"], session
+    )
+    if user_info["id"] != user_id:
+        return jsonify({"error": "You are not authorized to update this profile link."}), 403
+
+    json_data = request.get_json()
+    
+    logger.debug(f"{data}")
+    try:
+        logger.error(f"{e}")
+        collection.insert_one(
+            {"_id": user_id, "profile_url": json_data["link"]}
+        )
+    except Exception as e:
+        collection.update_one(
+            {"_id": user_id}, {"$set": {"profile_url": json_data["link"]}}
+        )
+    return jsonify({"success": True})
 
 @app.route("/login")
 def login():
@@ -130,7 +171,8 @@ def callback():
     return redirect(url_for("index"))
 
 
-@app.route("/<user_id>")
+@app.route("/user/<user_id>")
+@cache.cached(timeout=60, query_string=True, unless=lambda: request.args.get("refresh"))
 def user_top_page(user_id, is_base: bool = False):
     """
     It takes a user_id and a boolean value, and returns a rendered template of the user's top tracks and
@@ -143,51 +185,70 @@ def user_top_page(user_id, is_base: bool = False):
     Returns:
       A rendered template of the top page for the user.
     """
-    if request.args.get("track_added"):
-        track_added = True
-    else:
-        track_added = False
+    logger.debug(f"{user_id} called")
+    if not collection.find_one({"_id": user_id}):
+        return render_template("404.html"), 404
 
-    user_token = util.decrypt(collection.find_one({"_id": user_id})["token"])
-    
+    if user_id == "favicon.ico":
+        return redirect("/static/img/favicon.ico")
+
+    logger.info(f"{user_id} viewed their top page")
+    user_token = collection.find_one({"_id": user_id})["token"]
+    user_token = util.decrypt(user_token)
+
     user_token = util.check_and_refresh_token(sp_oauth, collection, user_token, session)
+    user_info = spotify.get_user_info(user_token["access_token"])
     user = {
-        "user_display_name": spotify.get_user_info(user_token["access_token"])[
-            "display_name"
-        ],
-        "user_profile_picture": spotipy.Spotify(
-            auth=user_token["access_token"]
-        ).current_user()["images"][0]["url"],
-        "user_id": user_id,
+        "user_display_name": user_info["display_name"],
+        "user_profile_picture": user_info["images"][0]["url"],
         "user_recommended_playlist_url": spotify.get_user_recommended_playlist(
             user_token["access_token"]
         )["external_urls"]["spotify"],
+        "profile_url": user_info["external_urls"]["spotify"],
+        "followers": user_info["followers"]["total"],
+        "user_id": user_info["id"],
     }
-    top_tracks = spotify.get_user_top_tracks(user_token["access_token"])
-    top_artists = spotify.get_user_top_artists(user_token["access_token"])
+    top_tracks = spotify.get_user_top_tracks(user_token["access_token"], collection)
+    top_artists = spotify.get_user_top_artists(user_token["access_token"], collection)
     currently_playing = spotify.get_user_currently_playing(user_token["access_token"])
     if currently_playing["track_name"] == "":
         try:
-            currently_playing = collection.find_one({"_id": user_id})["currently_playing"]
-        except:
-            currently_playing = {"track_name": "Nothing is playing",
-                                    "track_artist": "",
-                                    "track_album": "",
-                                    "track_image": "",
-                                    "track_url": "",
-                                }
+            currently_playing = collection.find_one({"_id": user_id})[
+                "currently_playing"
+            ]
+            if datetime.datetime.strptime(currently_playing["datetime_added"]) < datetime.datetime.now(
+            ) - datetime.timedelta(minutes=1):
+                raise "Cache expired"
+        except Exception as e:
+            collection.update_one(
+                {"_id": user_id},
+                {"$set": {"currently_playing": currently_playing}},
+            )
+
+    
+    if currently_playing["track_name"] == "Nothing is playing" or currently_playing["track_name"] == "":
+        has_currently_playing = False
+        print("has_currently_playing is false")
+        logger.debug(f"{user_id} has nothing playing")
+    else:
+        has_currently_playing = True
+        logger.debug(f"{currently_playing}")
+    user_data={"top_tracks": top_tracks, "top_artists": top_artists}
     return render_template(
-        "top.html.jinja",
+        "user_profile.jinja",
+        page="youraccount",
         user=user,
-        user_data={"top_tracks": top_tracks, "top_artists": top_artists},
+        user_data=user_data,
         currently_playing=currently_playing,
         base=is_base,
-        track_added=track_added,
+        has_currently_playing=has_currently_playing,
+        top_genres=spotify.get_user_top_genres(user_token["access_token"], collection)["genres"][0:10],
+        public_playlists=spotify.get_user_public_playlists(user_token["access_token"], collection)["playlists"],
     )
 
 
-@app.route("/<user_id>/currently_playing")
-@cache.memoize(timeout=60)
+@app.route("/user/<user_id>/currently_playing")
+@cache.memoize(timeout=120)
 def user_currently_playing(user_id):
     """
     It gets the currently playing track for a user, and updates the database with the track information
@@ -209,7 +270,7 @@ def user_currently_playing(user_id):
     return jsonify(currently_playing)
 
 
-@app.route("/<user_id>/add_to_queue", methods=["POST"])
+@app.route("/user/<user_id>/add_to_queue", methods=["POST"])
 def add_to_queue(user_id):
     """
     It takes a user id, finds the user's token, checks if the token is expired, refreshes it if it is,
@@ -229,7 +290,7 @@ def add_to_queue(user_id):
     return redirect(url_for("user_top_page", user_id=user_id))
 
 
-@app.route("/<user_id>/add_track_to_recommended_playlist", methods=["POST"])
+@app.route("/user/<user_id>/add_track_to_recommended_playlist", methods=["POST"])
 def add_track_to_recommended_playlist(user_id):
     """
     It takes a user id, finds the user's token, checks if the token is expired, if it is, it refreshes
@@ -250,6 +311,92 @@ def add_track_to_recommended_playlist(user_id):
     return redirect(url_for("user_top_page", user_id=user_id, track_added=True))
 
 
+@app.route("/user/<user_id>/public_playlists")
+def get_user_public_playlists(user_id):
+    """
+    It gets the user's public playlists
+
+    Args:
+      user_id: the user's id
+
+    Returns:
+      The user's public playlists
+    """
+    user_token = util.decrypt(collection.find_one({"_id": user_id})["token"])
+    user_token = util.check_and_refresh_token(sp_oauth, collection, user_token, session)
+    playlists = spotify.get_user_public_playlists(user_token["access_token"])
+    return jsonify(playlists)
+
+
+@app.route("/user/<user_id>/top_genres")
+def get_user_top_genres(user_id):
+    """
+    It gets the user's top genres
+
+    Args:
+      user_id: the user's id
+
+    Returns:
+      The user's top genres
+    """
+    user_token = util.decrypt(collection.find_one({"_id": user_id})["token"])
+    user_token = util.check_and_refresh_token(sp_oauth, collection, user_token, session)
+    top_genres = spotify.get_user_top_genres(user_token["access_token"], collection)
+    return jsonify(top_genres)
+
+@app.route("/user/<user_id>/top_artists")
+def get_user_top_artists(user_id):
+    """
+    It gets the user's top artists
+
+    Args:
+      user_id: the user's id
+
+    Returns:
+      The user's top artists
+    """
+    user_token = util.decrypt(collection.find_one({"_id": user_id})["token"])
+    user_token = util.check_and_refresh_token(sp_oauth, collection, user_token, session)
+    top_artists = spotify.get_user_top_artists(user_token["access_token"], collection)
+    return jsonify(top_artists)
+
+
+@app.route("/user/<user_id>/top_tracks")
+def get_user_top_tracks(user_id):
+    """
+    It gets the user's top tracks
+
+    Args:
+      user_id: the user's id
+
+    Returns:
+      The user's top tracks
+    """
+    user_token = util.decrypt(collection.find_one({"_id": user_id})["token"])
+    user_token = util.check_and_refresh_token(sp_oauth, collection, user_token, session)
+    top_tracks = spotify.get_user_top_tracks(user_token["access_token"], collection)
+    return jsonify(top_tracks)
+
+@app.route("/user/<user_id>/recently_played")    
+def get_user_recently_played(user_id):
+    """
+    It gets the user's recently played tracks
+    
+        Args:
+            user_id: the user's id
+
+        Returns:
+            The user's recently played tracks
+    """
+    user_token = util.decrypt(collection.find_one({"_id": user_id})["token"])
+    user_token = util.check_and_refresh_token(sp_oauth, collection, user_token, session)
+    recently_played = spotify.get_user_recently_played(user_token["access_token"], collection)
+    return jsonify(recently_played)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html", the_title="404"), 404
+
 # overrides the default
 # WSGIRequestHandler class to make it log the IP address of the client instead
 # of the IP address of the proxy server
@@ -263,11 +410,10 @@ class MyRequestHandler(WSGIRequestHandler):
     def log_request(self, code="-", size="-"):
         self.log_message('"%s" %s %s', self.requestline, str(code), str(size))
 
-
 if __name__ == "__main__":
     app.secret_key = os.getenv("ENCRYPTION_KEY")
-    logger = logging.getLogger("werkzeug")
-    logger.setLevel(logging.INFO)
+    logger = logging.getLogger("spotify")
+    logger.setLevel(logging.DEBUG)
     app.run(
         debug=False,
         host=os.getenv("HOST"),

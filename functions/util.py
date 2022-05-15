@@ -3,7 +3,8 @@ import os
 from cryptography.fernet import Fernet
 from functions import spotify
 import logging
-
+from dotenv import load_dotenv
+load_dotenv()
 logger = logging.getLogger("spotify")
 logger.setLevel(logging.DEBUG)
 
@@ -16,13 +17,10 @@ def encrypt(data):
         key = Fernet.generate_key()
         with open(".env", "a") as f:
             f.write(f'\nENCRYPTION_KEY= "{key.decode()}"')
-
-    print(key)
     fernet = Fernet(key)
-
     if isinstance(data, dict):
         data = json.dumps(data)
-
+    logger.debug(f"Encrypting {data}")
     return fernet.encrypt(data.encode())
 
 
@@ -35,6 +33,8 @@ def decrypt(data):
 
     if decrypted_data.startswith("{"):
         decrypted_data = json.loads(decrypted_data)
+    logger.debug(f"Decrypted {data} to {decrypted_data}")
+    logger.info(f"decypt function called")
     return decrypted_data
 
 
@@ -51,6 +51,7 @@ def generate_cookie(session, token):
     user_info = spotify.get_user_info(token["access_token"])
     logger.info(f"User {user_info['id']} cookie generated")
     data = {"user_info": user_info, "access_token": token}
+    logger.debug(f"posted cookie to {data}")
     session["auth"] = encrypt(data)
     return data
 
