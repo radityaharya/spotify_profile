@@ -56,7 +56,6 @@ app.config.from_mapping(config)
 cache = Cache(app)
 
 
-    
 @app.route("/")
 def index():
     """
@@ -73,20 +72,20 @@ def index():
         logger.info(f"{data['user_info']['id']} logged in")
         return redirect("/user/{}".format(data["user_info"]["id"]))
     else:
-        return render_template("index.jinja", page = "index")
+        return render_template("index.jinja", page="index")
+
 
 @app.route("/index")
 def home():
-    return render_template("index.jinja", page = "index")
+    return render_template("index.jinja", page="index")
+
 
 @app.route("/settings")
 def settings():
     data = util.get_cookie(session)
-    util.check_and_refresh_token(
-        sp_oauth, collection, data["access_token"], session
-    )
+    util.check_and_refresh_token(sp_oauth, collection, data["access_token"], session)
     user_info = data["user_info"]
-    
+
     user = {
         "user_display_name": user_info["display_name"],
         "user_profile_picture": user_info["images"][0]["url"],
@@ -94,31 +93,32 @@ def settings():
         "followers": user_info["followers"]["total"],
         "user_id": user_info["id"],
     }
-    return render_template("settings.jinja", user = user, page = "settings")
+    return render_template("settings.jinja", user=user, page="settings")
+
 
 @app.route("/user/<user_id>/update_profile_link", methods=["POST"])
 def update_profile_link(user_id):
     data = util.get_cookie(session)
     user_info = data["user_info"]
-    util.check_and_refresh_token(
-        sp_oauth, collection, data["access_token"], session
-    )
+    util.check_and_refresh_token(sp_oauth, collection, data["access_token"], session)
     if user_info["id"] != user_id:
-        return jsonify({"error": "You are not authorized to update this profile link."}), 403
+        return (
+            jsonify({"error": "You are not authorized to update this profile link."}),
+            403,
+        )
 
     json_data = request.get_json()
-    
+
     logger.debug(f"{data}")
     try:
         logger.error(f"{e}")
-        collection.insert_one(
-            {"_id": user_id, "profile_url": json_data["link"]}
-        )
+        collection.insert_one({"_id": user_id, "profile_url": json_data["link"]})
     except Exception as e:
         collection.update_one(
             {"_id": user_id}, {"$set": {"profile_url": json_data["link"]}}
         )
     return jsonify({"success": True})
+
 
 @app.route("/login")
 def login():
@@ -216,8 +216,9 @@ def user_top_page(user_id, is_base: bool = False):
             currently_playing = collection.find_one({"_id": user_id})[
                 "currently_playing"
             ]
-            if datetime.datetime.strptime(currently_playing["datetime_added"]) < datetime.datetime.now(
-            ) - datetime.timedelta(minutes=1):
+            if datetime.datetime.strptime(
+                currently_playing["datetime_added"]
+            ) < datetime.datetime.now() - datetime.timedelta(minutes=1):
                 raise "Cache expired"
         except Exception as e:
             collection.update_one(
@@ -225,15 +226,17 @@ def user_top_page(user_id, is_base: bool = False):
                 {"$set": {"currently_playing": currently_playing}},
             )
 
-    
-    if currently_playing["track_name"] == "Nothing is playing" or currently_playing["track_name"] == "":
+    if (
+        currently_playing["track_name"] == "Nothing is playing"
+        or currently_playing["track_name"] == ""
+    ):
         has_currently_playing = False
         print("has_currently_playing is false")
         logger.debug(f"{user_id} has nothing playing")
     else:
         has_currently_playing = True
         logger.debug(f"{currently_playing}")
-    user_data={"top_tracks": top_tracks, "top_artists": top_artists}
+    user_data = {"top_tracks": top_tracks, "top_artists": top_artists}
     return render_template(
         "user_profile.jinja",
         page="youraccount",
@@ -242,8 +245,12 @@ def user_top_page(user_id, is_base: bool = False):
         currently_playing=currently_playing,
         base=is_base,
         has_currently_playing=has_currently_playing,
-        top_genres=spotify.get_user_top_genres(user_token["access_token"], collection)["genres"][0:10],
-        public_playlists=spotify.get_user_public_playlists(user_token["access_token"], collection)["playlists"],
+        top_genres=spotify.get_user_top_genres(user_token["access_token"], collection)[
+            "genres"
+        ][0:10],
+        public_playlists=spotify.get_user_public_playlists(
+            user_token["access_token"], collection
+        )["playlists"],
     )
 
 
@@ -344,6 +351,7 @@ def get_user_top_genres(user_id):
     top_genres = spotify.get_user_top_genres(user_token["access_token"], collection)
     return jsonify(top_genres)
 
+
 @app.route("/user/<user_id>/top_artists")
 def get_user_top_artists(user_id):
     """
@@ -377,11 +385,12 @@ def get_user_top_tracks(user_id):
     top_tracks = spotify.get_user_top_tracks(user_token["access_token"], collection)
     return jsonify(top_tracks)
 
-@app.route("/user/<user_id>/recently_played")    
+
+@app.route("/user/<user_id>/recently_played")
 def get_user_recently_played(user_id):
     """
     It gets the user's recently played tracks
-    
+
         Args:
             user_id: the user's id
 
@@ -390,12 +399,16 @@ def get_user_recently_played(user_id):
     """
     user_token = util.decrypt(collection.find_one({"_id": user_id})["token"])
     user_token = util.check_and_refresh_token(sp_oauth, collection, user_token, session)
-    recently_played = spotify.get_user_recently_played(user_token["access_token"], collection)
+    recently_played = spotify.get_user_recently_played(
+        user_token["access_token"], collection
+    )
     return jsonify(recently_played)
+
 
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("404.html", the_title="404"), 404
+
 
 # overrides the default
 # WSGIRequestHandler class to make it log the IP address of the client instead
@@ -409,6 +422,7 @@ class MyRequestHandler(WSGIRequestHandler):
 
     def log_request(self, code="-", size="-"):
         self.log_message('"%s" %s %s', self.requestline, str(code), str(size))
+
 
 if __name__ == "__main__":
     app.secret_key = os.getenv("ENCRYPTION_KEY")
