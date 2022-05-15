@@ -4,6 +4,7 @@ from cryptography.fernet import Fernet
 from functions import spotify
 import logging
 from dotenv import load_dotenv
+
 load_dotenv()
 logger = logging.getLogger("spotify")
 logger.setLevel(logging.DEBUG)
