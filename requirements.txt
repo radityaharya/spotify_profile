@@ -5,4 +5,4 @@ pymongo==4.0.2
 python-dotenv==0.20.0
 rich==12.4.1
 spotipy==2.19.0
-Werkzeug==2.1.1
+Werkzeug==2.2.3
